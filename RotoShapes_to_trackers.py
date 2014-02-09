@@ -122,7 +122,7 @@ def RotoShape_to_Trackers():
                         k.setValueAt(pos[count][1],f,numColumns*trackIdx + colTrackY)
                         count += 1
                     #===========================================================
-                    # if execution frame is outside the framerange remove the keyframes from it
+                    # if execution frame is outside the framerange remove the keyframes from it!
                     #===========================================================
                     if not fRange.isInRange(nuke.frame()):
                         for n in range(numColumns): 
