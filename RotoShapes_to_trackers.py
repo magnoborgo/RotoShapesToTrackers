@@ -1,34 +1,3 @@
-#Boundary Visual Effects - Bake RotoShape Points to Trackers
-#Version 1.2
-#
-#Created by Magno Borgo
-#For greeting, bugs, and requests email me at mborgo[at]boundaryvfx.com
-#If you like and use the script frequently, please consider a small donation via Paypal to the same email above.
-#
-#Compatibility: Nuke 6.1 and up (not tested on previous versions)
-#
-#
-#Legal stuff:
-#This script is provided "as is," without warranty of any kind, expressed
-#or implied. In no event shall the author be held liable for any damages 
-#arising in any way from the use of this script.
-#
-# Usage: This will bake the actual rotoshapes' points positions to trackers on the requested framerange, including transforms on the parent Layers
-# Select a rotopaint node and run the script
-#
-#***********************************************************
-#Changelog
-#v1.0
-#initial release.
-#
-#v1.1
-#modified the script to run better from user interface (in menus/DAG/etc)
-#Speed improvements, its now really fast (Thanks to Rafael Perez for the tip)
-#Better shape detection and Cancelling the script works better
-#v1.2 refined the walker obj detection, now works with all kinds of shapes sources (mocha/etc)
-
-
-#***********************************************************
 import nuke.rotopaint as rp, math
 
 def walker(obj, list):
@@ -67,7 +36,7 @@ def TransformLayers(point, Layer, f, rotoRoot, shapeList):
                 newpoint = TransformLayers(newpoint, x[1], f, rotoRoot, shapeList)
     return newpoint
 
-def Roto_to_Trackers():
+def RotoShape_to_Trackers():
     rotoNode = nuke.selectedNode()
     if rotoNode.Class() not in ('Roto', 'RotoPaint'):
         if nuke.GUI:
@@ -107,32 +76,58 @@ def Roto_to_Trackers():
                     positionsList[trker].append(xy)
                     trker += 1;
             trker = 0
+            if nuke.NUKE_VERSION_MAJOR >= 7:
+                trackNode = nuke.createNode('Tracker4')
             for pos in positionsList:
                 if task.isCancelled():
                     cancel = True
                     break                
                 if cancel:
                     break
-                            
-                trackNode = nuke.createNode('Tracker3', inpanel=False)
-                trackNode.setName("POINT_" + str(trker) + "_" + trackNode.name())
-                trackNode["track1"].setAnimated(0)
-                trackNode["track1"].setAnimated(1)
-                task.setMessage(shape[0].name + '\nBaking point ' + str(trker + 1) + " of " + str(len(positionsList)))
-                
-                count = 0
-                for f in fRange:
-                    if task.isCancelled():
-                        cancel = True
-                        break   
-                    task.setProgress(int(((float(f) - fRange.first()) / (fRange.last() - fRange.first())* 100)))
-                    a = trackNode["track1"].animations()
-                    a[0].setKey(f, pos[count][0])
-                    a[1].setKey(f, pos[count][1])
-                    count += 1
-                trker += 1;
+                if nuke.NUKE_VERSION_MAJOR < 7:
+                    trackNode = nuke.createNode('Tracker3', inpanel=False)
+                    trackNode.setName("POINT_" + str(trker) + "_" + trackNode.name())
+                    trackNode["track1"].setAnimated(0)
+                    trackNode["track1"].setAnimated(1)
+                    task.setMessage(shape[0].name + '\nBaking point ' + str(trker + 1) + " of " + str(len(positionsList)))
+                    
+                    count = 0
+                    for f in fRange:
+                        if task.isCancelled():
+                            cancel = True
+                            break   
+                        task.setProgress(int(((float(f) - fRange.first())+1 / (fRange.last() - fRange.first()+1)* 100)))
+                        a = trackNode["track1"].animations()
+                        a[0].setKey(f, pos[count][0])
+                        a[1].setKey(f, pos[count][1])
+                        count += 1
+                    trker += 1;
+                if nuke.NUKE_VERSION_MAJOR >= 7:
+                    k = trackNode['tracks']
+                    #===========================================================
+                    # handy ref is here: http://forums.thefoundry.co.uk/phpBB2/viewtopic.php?t=8130
+                    #===========================================================
+                    numColumns = 31
+                    colTrackX = 2
+                    colTrackY = 3
+                    trackNode["add_track"].execute()
+                    trackIdx = trker # 0 for the first track
+                    count = 0
+                    for f in fRange:
+                        if task.isCancelled():
+                            cancel = True
+                            break   
+                        task.setProgress(int(((float(f) - fRange.first())+1 / (fRange.last() - fRange.first()+1)* 100)))
+                        k.setValueAt(pos[count][0],f, numColumns*trackIdx + colTrackX)
+                        k.setValueAt(pos[count][1],f,numColumns*trackIdx + colTrackY)
+                        count += 1
+                    #===========================================================
+                    # if execution frame is outside the framerange remove the keyframes from it
+                    #===========================================================
+                    if not fRange.isInRange(nuke.frame()):
+                        for n in range(numColumns): 
+                            k.removeKeyAt(nuke.frame(),numColumns*trackIdx + n)                
+                    trker += 1;
 
-#remove the line below if you are using the script with menu.py (in menus/DAG/etc)
 if __name__ == '__main__':
-    Roto_to_Trackers()
-
+    RotoShape_to_Trackers()
