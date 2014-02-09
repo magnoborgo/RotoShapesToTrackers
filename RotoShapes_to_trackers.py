@@ -1,4 +1,4 @@
-import nuke.rotopaint as rp, math
+import nuke, nuke.rotopaint as rp, math
 
 def walker(obj, list):
     for i in obj:
@@ -7,7 +7,7 @@ def walker(obj, list):
             list.append([i, obj]) 
         if isinstance(i, nuke.rotopaint.Layer):
             list.append([i, obj])
-            rptsw_walker(i, list)
+            walker(i, list)
     return list
 
     

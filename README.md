@@ -2,6 +2,8 @@ RotoShapesToTrackers
 ======================
 This Nuke python script will bake the actual rotoshapes' points positions to trackers on the requested framerange, including transforms on the parent Layers
 
+Lastest update create trackers inside a single node, using the Nuke v7 tracker node.
+
 If you like it, use it frequently, or want to support further development please consider a small donation to the author.   
 <a href='http://www.pledgie.com/campaigns/21123'><img alt='Click here to lend your support to: VFX tools coding project and make a donation at www.pledgie.com !' src='http://www.pledgie.com/campaigns/21123.png?skin_name=chrome' border='0' /></a>
 
