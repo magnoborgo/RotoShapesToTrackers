@@ -1,4 +1,5 @@
 import nuke, nuke.rotopaint as rp, math
+import sys
 
 def walker(obj, list):
     for i in obj:
@@ -41,7 +42,10 @@ def RotoShape_to_Trackers():
     if rotoNode.Class() not in ('Roto', 'RotoPaint'):
         if nuke.GUI:
             nuke.message('Unsupported node type. Selected Node must be Roto or RotoPaint')
-        raise TypeError, 'Unsupported node type. Selected Node must be Roto or RotoPaint'
+            if sys.version_info.major >= 3:    
+                raise TypeError('Unsupported node type. Selected Node must be Roto or RotoPaint')
+            else:
+                raise TypeError
 
     fRange = nuke.FrameRange(nuke.getInput('Inform the Frame Range to bake', '%s-%s' % (nuke.root().firstFrame(), nuke.root().lastFrame())))
     rotoCurve = rotoNode['curves']
